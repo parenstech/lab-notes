@@ -1,0 +1,14 @@
+{:deps {io.github.borkdude/quickblog
+        {:git/sha "993d40a46dc30fb735b41244b4c638ef5b3181e5"}}
+ :tasks
+ {:requires ([quickblog.cli :as cli])
+  :init (def opts {:blog-title "Lab Notes"
+                   :blog-description "Clojure experiments from the lab"
+                   :blog-author "Yenda"
+                   :out-dir "public"
+                   :posts-dir "posts"
+                   :assets-dir "img"
+                   :favicon-dir "img"
+                   :favicon "logo.png"})
+  quickblog {:doc "Run quickblog commands"
+             :task (cli/dispatch opts)}}}

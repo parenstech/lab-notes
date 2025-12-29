@@ -1,0 +1,15 @@
+# Generated output (built by GitHub Actions)
+public/
+
+# Quickblog cache
+.work/
+
+# Editor/IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*~
+
+# OS
+.DS_Store
