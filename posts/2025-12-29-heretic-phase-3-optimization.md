@@ -5,7 +5,7 @@ Preview: true
 
 Mutation testing has an image problem. Mention it at a conference and watch developers nod approvingly before asking, "But doesn't it take forever?" They're not wrong. Run a thousand mutations, execute your test suite for each one, and suddenly you're measuring build times in hours rather than seconds. It's the kind of technique everyone admires but nobody actually uses.
 
-Phase 3 of [Heretic](https://github.com/yenda/heretic) is my answer to that cynicism. What if mutation testing could run in seconds instead of hours?
+Phase 3 of [Heretic](https://github.com/parenstech/heretic) is my answer to that cynicism. What if mutation testing could run in seconds instead of hours?
 
 ## The Math That Kills Mutation Testing
 

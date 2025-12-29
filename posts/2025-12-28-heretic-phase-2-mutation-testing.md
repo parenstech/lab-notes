@@ -219,7 +219,7 @@ Without targeted testing, you'd run the full suite 47 times. The coverage index 
 
 ## Getting Started
 
-[Heretic](https://github.com/yenda/heretic) is available on GitHub.
+[Heretic](https://github.com/parenstech/heretic) is available on GitHub.
 
 ```clojure
 (require '[heretic.core :as heretic])

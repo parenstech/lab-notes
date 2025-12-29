@@ -9,7 +9,7 @@ The idea is elegant. Take your code, introduce small bugs (mutations), and check
 
 Here's the problem. For each mutation, you run your entire test suite. Got 500 mutations and a 30-second test suite? That's over four hours of CPU time. For a realistic codebase, we're talking days.
 
-This is why mutation testing remains a curiosity rather than a standard practice. And this is what [Heretic](https://github.com/yenda/heretic) fixes.
+This is why mutation testing remains a curiosity rather than a standard practice. And this is what [Heretic](https://github.com/parenstech/heretic) fixes.
 
 ## The Insight: Most Mutations Only Need 2-3 Tests
 

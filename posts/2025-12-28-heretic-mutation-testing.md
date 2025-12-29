@@ -51,7 +51,7 @@ But Clojure adds unique challenges:
 
 ## What If It Could Be Fast?
 
-The insight that makes [Heretic](https://github.com/yenda/heretic) practical: most mutations only need 2-3 tests.
+The insight that makes [Heretic](https://github.com/parenstech/heretic) practical: most mutations only need 2-3 tests.
 
 When you mutate a single expression, you don't need your entire test suite. You need only the tests that exercise that expression. Usually that's a handful of tests, not hundreds.
 
