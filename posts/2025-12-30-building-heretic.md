@@ -1,6 +1,9 @@
 Title: Building Heretic: From ClojureStorm to Mutant Schemata
 Date: 2025-12-30
 Tags: clojure, testing, mutation-testing, clojurestorm
+Image: img/heretic-logo.webp
+
+<img src="/img/heretic-logo.webp" alt="Heretic" width="50%">
 
 *This is Part 2 of a series on mutation testing in Clojure. [Part 1](/posts/2025-12-28-heretic-mutation-testing.html) introduced the concept and why Clojure needed a purpose-built tool.*
 
