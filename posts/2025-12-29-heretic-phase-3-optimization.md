@@ -246,7 +246,7 @@ In a language built on immutability, mutation remains heresy. But it's become fa
 
 This post is part of the Heretic series on building a mutation testing tool for Clojure:
 
-- [Introduction](/posts/2025-12-28-heretic-mutation-testing.html)
-- [Phase 1: Coverage Mapping](/posts/2025-12-28-heretic-phase-1-complete.html)
-- [Phase 2: Mutation Testing](/posts/2025-12-28-heretic-phase-2-mutation-testing.html)
+- [Introduction](/2025-12-28-heretic-mutation-testing.html)
+- [Phase 1: Coverage Mapping](/2025-12-28-heretic-phase-1-complete.html)
+- [Phase 2: Mutation Testing](/2025-12-28-heretic-phase-2-mutation-testing.html)
 - **Phase 3: Optimization** (this post)

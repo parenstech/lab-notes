@@ -259,7 +259,7 @@ Mutation is heresy. But now it's *productive* heresy.
 
 This post is part of the Heretic series on building a mutation testing tool for Clojure:
 
-- [Introduction](/posts/2025-12-28-heretic-mutation-testing.html)
-- [Phase 1: Coverage Mapping](/posts/2025-12-28-heretic-phase-1-complete.html)
+- [Introduction](/2025-12-28-heretic-mutation-testing.html)
+- [Phase 1: Coverage Mapping](/2025-12-28-heretic-phase-1-complete.html)
 - **Phase 2: Mutation Testing** (this post)
-- [Phase 3: Optimization](/posts/2025-12-29-heretic-phase-3-optimization.html)
+- [Phase 3: Optimization](/2025-12-29-heretic-phase-3-optimization.html)

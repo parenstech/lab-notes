@@ -442,6 +442,6 @@ The result is mutation testing that runs in seconds for typical projects instead
 
 ---
 
-This covers the core implementation. The [next post](/posts/2025-01-06-heretic-ai-mutations.html) will explore Phase 4: AI-powered semantic mutations and hybrid equivalent detection - using LLMs to generate the subtle, domain-aware mutations that traditional operators miss.
+This covers the core implementation. The [next post](/2025-01-06-heretic-ai-mutations.html) will explore Phase 4: AI-powered semantic mutations and hybrid equivalent detection - using LLMs to generate the subtle, domain-aware mutations that traditional operators miss.
 
-**Previously:** [Part 1 - Heretic: Mutation Testing in Clojure](/posts/2025-12-28-heretic-mutation-testing.html)
+**Previously:** [Part 1 - Heretic: Mutation Testing in Clojure](/2025-12-28-heretic-mutation-testing.html)
