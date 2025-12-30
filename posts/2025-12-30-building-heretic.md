@@ -18,17 +18,17 @@ Traditional coverage tools track lines. Heretic tracks expressions.
 The difference matters. Consider:
 
 ```clojure
-(defn apply-discount [price user]
-  (if (:premium user)
-    (* price 0.8)    ;; <- Line 3
-    price))
+(defn process-order [order]
+  (if (> (:quantity order) 10)
+    (* (:price order) 0.9)    ;; <- Line 3: bulk discount
+    (:price order)))
 ```
 
-Line-level coverage would show line 3 as "covered" if any test enters the `if`-true branch. Expression-level coverage distinguishes between tests that evaluate `*`, `price`, and `0.8`. When we later mutate `0.8` to `1.2`, we can run only the tests that actually touched that specific literal.
+Line-level coverage would show line 3 as "covered" if any test enters the bulk discount branch. But expression-level coverage distinguishes between tests that evaluate `*`, `(:price order)`, and `0.9`. When we later mutate `0.9` to `1.1`, we can run only the tests that actually touched that specific literal - not every test that happened to call `process-order`.
 
 ### ClojureStorm's Instrumented Compiler
 
-ClojureStorm is a fork of the Clojure compiler that instruments every expression during compilation. Originally built for the [FlowStorm](https://github.com/flow-storm/flow-storm-debugger) debugger, it provides exactly the hooks Heretic needs.
+[ClojureStorm](https://github.com/flow-storm/clojure) is a fork of the Clojure compiler that instruments every expression during compilation. Created by [Juan Monetta](https://github.com/jpmonettas) for the [FlowStorm](https://github.com/flow-storm/flow-storm-debugger) debugger, it provides exactly the hooks Heretic needs. (Thanks to Juan for building such a solid foundation - Heretic would not exist without ClojureStorm.)
 
 The integration is surprisingly minimal:
 
@@ -62,8 +62,10 @@ The integration is surprisingly minimal:
 
 When any instrumented expression evaluates, ClojureStorm calls our callback with two pieces of information:
 
-- **form-id**: A unique identifier for the top-level form (computed by hashing the form's source text)
+- **form-id**: A unique identifier for the top-level form (e.g., an entire `defn`)
 - **coord**: A path into the form's AST, like `"3,2,1"` meaning "third child, second child, first child"
+
+Together, `[form-id coord]` pinpoints exactly which subexpression executed. This is the key that unlocks targeted test selection.
 
 ### The Coordinate System
 
@@ -81,13 +83,17 @@ For the function above:
 - `"3,1"` points to `a`
 - `"3,2"` points to `b`
 
-Maps and sets, being unordered, use hash-based coordinates. The key `:user` might be addressed as `"K2847561"` where the number is a hash of the key's printed representation.
+Maps and sets, being unordered, use hash-based coordinates. The key `:user` in a map literal might be addressed as `"K2847561"` where the number is derived from the key's printed representation. This ensures stable addressing even though Clojure's map ordering is not guaranteed.
+
+With this addressing scheme, we can say "test X touched coordinate 3,1 in form 12345" and later ask "which tests touched the expression we're about to mutate?"
 
 ### The Form-Location Bridge
 
-Here's a problem we discovered during implementation: ClojureStorm assigns form-ids at compile time, while [rewrite-clj](https://github.com/clj-commons/rewrite-clj) computes its own hashes from source text. They don't match.
+Here's a problem we discovered during implementation: how do we connect the mutation engine to the coverage data?
 
-The solution was building a bridge through file locations. ClojureStorm's FormRegistry stores the file and line for each form. We build an index:
+The mutation engine uses [rewrite-clj](https://github.com/clj-commons/rewrite-clj) to parse and transform source files. It finds a mutation site at, say, line 42 of `src/my/app.clj`. But the coverage data is indexed by ClojureStorm's form-id - an opaque identifier assigned during compilation. We need to translate "file + line" into "form-id".
+
+Fortunately, ClojureStorm's FormRegistry stores the source file and starting line for each compiled form. We build a lookup index:
 
 ```clojure
 (defn build-form-location-index [forms source-paths]
@@ -99,7 +105,9 @@ The solution was building a bridge through file locations. ClojureStorm's FormRe
           [[abs-path line] form-id])))
 ```
 
-When the mutation engine finds a mutation site at `src/my/app.clj` line 42, it looks up the ClojureStorm form-id via this index. The lookup finds the form whose start line is the largest value less than or equal to the mutation's line - the containing form.
+When the mutation engine finds a site at line 42, it searches for the form whose start line is the largest value less than or equal to 42 - that is, the innermost containing form. This gives us the ClojureStorm form-id, which we use to look up which tests touched that form.
+
+This bridging layer is what allows Heretic to connect source transformations to runtime coverage, enabling targeted test execution.
 
 ### Collection Workflow
 
@@ -127,6 +135,8 @@ The result is a map from test symbol to coverage data:
 ```
 
 This gets persisted to `.heretic/coverage/` with one file per test namespace, enabling incremental updates. Change a test file? Only that namespace gets recollected.
+
+At this point we have a complete map: for every test, we know exactly which `[form-id coord]` pairs it touched. Now we need to generate mutations and look up which tests are relevant for each one.
 
 ## Phase 2: The Mutation Engine
 
@@ -167,6 +177,8 @@ The `walk-form` function traverses the zipper depth-first. At each node, we chec
                    (= '+ (z/sexpr zloc))))})
 ```
 
+Each mutation site captures the file, line, column, operator, and - critically - the coordinate path within the form. This coordinate is what connects a mutation to the coverage data from Phase 1.
+
 ### Coordinate Mapping
 
 The tricky part is converting between rewrite-clj's zipper positions and ClojureStorm's coordinate strings. We need bidirectional conversion for the round-trip:
@@ -201,6 +213,8 @@ The validation requirement is that these must be inverses:
 ```clojure
 (= coord (zloc->coord (coord->zloc zloc coord)))
 ```
+
+With correct coordinate mapping, we can take a mutation at a known location and ask "which tests touched this exact spot?" That query is what makes targeted test execution possible.
 
 ### Applying Mutations
 
@@ -252,6 +266,8 @@ The mutation workflow becomes:
 ;; Mutation automatically reverted in finally block
 ```
 
+At this point we have the full pipeline: parse source, find mutation sites, apply a mutation, hot-reload, run targeted tests, restore. But running this once per mutation is still slow for large codebases. Phase 3 addresses that.
+
 ### 80+ Clojure-Specific Operators
 
 The operator library is where Heretic's Clojure focus shows. Beyond the standard arithmetic and comparison swaps, we have:
@@ -282,6 +298,8 @@ The operator library is where Heretic's Clojure focus shows. Beyond the standard
 
 The full set includes `first`/`last`, `rest`/`next`, `filter`/`remove`, `conj`/`disj`, `some->`/`->`, and qualified keyword mutations. These are the mistakes Clojure developers actually make.
 
+With 80+ operators applied to a real codebase, mutation counts grow quickly. The next phase makes this tractable.
+
 ## Phase 3: Optimization Techniques
 
 With 80+ operators and a real codebase, mutation counts get large fast. A 1000-line project might generate 5000 mutations. Running the full test suite 5000 times is not practical.
@@ -300,6 +318,8 @@ This is the big one, enabled by Phase 1. Instead of running all tests for every 
 ```
 
 A mutation at `(+ a b)` might only be covered by 2 tests out of 200. We run those 2 tests in milliseconds instead of the full suite in seconds.
+
+This is where the Phase 1 coverage investment pays off. But we can go further by reducing the number of mutations we generate in the first place.
 
 ### Equivalent Mutation Detection
 
@@ -324,6 +344,8 @@ Some mutations produce semantically identical code. Detecting these upfront avoi
 ```
 
 The patterns cover boundary comparisons (`(>= (count x) 0)` is always true), function contracts (`(nil? (str x))` is always false), and lazy/eager equivalences (`(vec (map f xs))` equals `(vec (mapv f xs))`).
+
+Filtering equivalent mutations prevents false "survived" reports. But we can also skip mutations that would be redundant to test.
 
 ### Subsumption Analysis
 
@@ -356,6 +378,8 @@ The subsumption graph also enables intelligent mutation selection:
     #{}
     operators)))
 ```
+
+These techniques reduce mutation count. The final optimization reduces the cost of each mutation.
 
 ### Mutant Schemata: Compile Once, Select at Runtime
 
