@@ -69,21 +69,39 @@ Together, `[form-id coord]` pinpoints exactly which subexpression executed. This
 
 ### The Coordinate System
 
-ClojureStorm coordinates are strings representing paths into the AST:
+To connect a mutation in the source code to the coverage data, we need a way to uniquely address any subexpression. Think of it as a postal address for code - we need to say "the `a` inside the `+` call inside the function body" in a format that both the coverage tracer and mutation engine can agree on.
 
-```clojure
+ClojureStorm addresses this with a path-based coordinate system. Consider this function as a tree:
+
+```
 (defn foo [a b] (+ a b))
-;;  0    1   2     3
-;;              3,0 3,1 3,2
+   │
+   ├─[0] defn
+   ├─[1] foo
+   ├─[2] [a b]
+   └─[3] (+ a b)
+            │
+            ├─[3,0] +
+            ├─[3,1] a
+            └─[3,2] b
 ```
 
-For the function above:
-- `"3"` points to `(+ a b)`
-- `"3,0"` points to `+`
-- `"3,1"` points to `a`
-- `"3,2"` points to `b`
+Each number represents which child to pick at each level. The coordinate `"3,2"` means "go to child 3 (the function body), then child 2 (the second argument to `+`)". That gives us the `b` symbol.
 
-Maps and sets, being unordered, use hash-based coordinates. The key `:user` in a map literal might be addressed as `"K2847561"` where the number is derived from the key's printed representation. This ensures stable addressing even though Clojure's map ordering is not guaranteed.
+This works cleanly for ordered structures like lists and vectors, where children have stable positions. But maps are unordered - `{:name "Alice" :age 30}` and `{:age 30 :name "Alice"}` are the same value, so numeric indices would be unstable.
+
+ClojureStorm solves this by hashing the printed representation of map keys. Instead of `"0"` for the first entry, a key like `:name` gets addressed as `"K-1925180523"`:
+
+```
+{:name "Alice" :age 30}
+   │
+   ├─[K-1925180523] :name
+   ├─[V-1925180523] "Alice"
+   ├─[K-1524292809] :age
+   └─[V-1524292809] 30
+```
+
+The hash ensures stable addressing regardless of iteration order.
 
 With this addressing scheme, we can say "test X touched coordinate 3,1 in form 12345" and later ask "which tests touched the expression we're about to mutate?"
 
@@ -466,6 +484,6 @@ The result is mutation testing that runs in seconds for typical projects instead
 
 ---
 
-This covers the core implementation. The [next post](/2025-01-06-heretic-ai-mutations.html) will explore Phase 4: AI-powered semantic mutations and hybrid equivalent detection - using LLMs to generate the subtle, domain-aware mutations that traditional operators miss.
+This covers the core implementation. A future post will explore Phase 4: AI-powered semantic mutations and hybrid equivalent detection - using LLMs to generate the subtle, domain-aware mutations that traditional operators miss.
 
 **Previously:** [Part 1 - Heretic: Mutation Testing in Clojure](/2025-12-28-heretic-mutation-testing.html)
