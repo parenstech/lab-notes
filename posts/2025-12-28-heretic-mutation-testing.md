@@ -1,6 +1,9 @@
 Title: Heretic: Mutation Testing in Clojure
 Date: 2025-12-28
 Tags: clojure, testing, mutation-testing
+Image: img/heretic.webp
+
+![Heretic](/img/heretic.webp)
 
 Your tests pass. Your coverage is high. You deploy.
 
