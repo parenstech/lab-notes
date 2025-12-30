@@ -29,6 +29,9 @@ jobs:
       - name: Build blog
         run: bb quickblog render
 
+      - name: Copy assets to public
+        run: cp -r img/* public/img/
+
       - name: Copy CNAME for custom domain
         run: cp CNAME public/
 
