@@ -5,7 +5,7 @@ Image: img/heretic-logo.webp
 
 <img src="/img/heretic-logo.webp" alt="Heretic" width="50%">
 
-*This is Part 2 of a series on mutation testing in Clojure. [Part 1](/posts/2025-12-28-heretic-mutation-testing.html) introduced the concept and why Clojure needed a purpose-built tool.*
+*This is Part 2 of a series on mutation testing in Clojure. [Part 1](/2025-12-28-heretic-mutation-testing.html) introduced the concept and why Clojure needed a purpose-built tool.*
 
 The previous post made a claim: mutation testing can be fast if you know which tests to run. This post shows how [Heretic](https://github.com/parenstech/heretic) makes that happen.
 
