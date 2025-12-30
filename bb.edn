@@ -5,6 +5,7 @@
   :init (def opts {:blog-title "Lab Notes"
                    :blog-description "Clojure experiments from the lab"
                    :blog-author "Yenda"
+                   :blog-root "https://blog.parenstech.com"
                    :out-dir "public"
                    :posts-dir "posts"
                    :assets-dir "img"
